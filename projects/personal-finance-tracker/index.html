@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Tracker - Dual Implementation Project</title>
+    <meta name="description" content="Personal finance management application with JavaFX desktop and Go web implementations">
+    
+    <style>
+        :root {
+            --terminal-bg: #0c0c0c;
+            --terminal-text: #00ff00;
+            --terminal-prompt: #ffff00;
+            --terminal-error: #ff0000;
+            --terminal-info: #00ffff;
+            --terminal-warning: #ffa500;
+            --terminal-accent: #ff00ff;
+            --terminal-secondary: #9dbaea;
+            --terminal-success: #32cd32;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--terminal-bg);
+            color: var(--terminal-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--terminal-bg);
+            color: var(--terminal-info);
+            text-decoration: none;
+            padding: 10px 15px;
+            border: 2px solid var(--terminal-info);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button a:hover {
+            background: var(--terminal-info);
+            color: var(--terminal-bg);
+        }
+
+        .project-header {
+            text-align: center;
+            margin: 60px 0 40px 0;
+            padding: 40px 20px;
+            border: 2px solid var(--terminal-success);
+            border-radius: 8px;
+            background: rgba(50, 205, 50, 0.05);
+        }
+
+        .project-header h1 {
+            color: var(--terminal-success);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--terminal-success);
+        }
+
+        .project-subtitle {
+            color: var(--terminal-info);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .project-description {
+            color: var(--terminal-text);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .tech-tag {
+            background: rgba(50, 205, 50, 0.1);
+            color: var(--terminal-success);
+            padding: 5px 12px;
+            border: 1px solid var(--terminal-success);
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .section {
+            margin: 40px 0;
+            padding: 30px;
+            border: 1px solid var(--terminal-text);
+            border-radius: 8px;
+            background: rgba(0, 255, 0, 0.02);
+        }
+
+        .section h2 {
+            color: var(--terminal-info);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section h3 {
+            color: var(--terminal-warning);
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+            border-bottom: 1px solid var(--terminal-warning);
+            padding-bottom: 5px;
+        }
+
+        .section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .implementation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .implementation-card {
+            background: rgba(50, 205, 50, 0.05);
+            border: 2px solid var(--terminal-success);
+            border-radius: 8px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .implementation-card:hover {
+            border-color: var(--terminal-info);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .implementation-card h4 {
+            color: var(--terminal-success);
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .implementation-card .tech-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .implementation-card .tech-list li {
+            color: var(--terminal-text);
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .implementation-card .tech-list li:before {
+            content: "▶";
+            color: var(--terminal-success);
+            position: absolute;
+            left: 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--terminal-info);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--terminal-warning);
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.2);
+        }
+
+        .feature-card h4 {
+            color: var(--terminal-info);
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--terminal-text);
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--terminal-text);
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .highlight {
+            color: var(--terminal-warning);
+            font-weight: bold;
+        }
+
+        .keyword {
+            color: var(--terminal-accent);
+        }
+
+        .string {
+            color: var(--terminal-info);
+        }
+
+        .comment {
+            color: var(--terminal-secondary);
+            font-style: italic;
+        }
+
+        .architecture-diagram {
+            background: rgba(255, 0, 255, 0.05);
+            border: 1px solid var(--terminal-accent);
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .architecture-diagram h3 {
+            color: var(--terminal-accent);
+            border-bottom-color: var(--terminal-accent);
+        }
+
+        .component-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .component-list li {
+            color: var(--terminal-text);
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .component-list li:before {
+            content: "▶";
+            color: var(--terminal-success);
+            position: absolute;
+            left: 0;
+        }
+
+        .links-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--terminal-success);
+            text-decoration: none;
+            padding: 12px 20px;
+            border: 2px solid var(--terminal-success);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .project-link:hover {
+            background: var(--terminal-success);
+            color: var(--terminal-bg);
+            transform: translateY(-2px);
+        }
+
+        .ascii-art {
+            color: var(--terminal-accent);
+            white-space: pre;
+            font-size: 0.7em;
+            text-align: center;
+            margin: 40px 0;
+            line-height: 1.2;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid var(--terminal-text);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: rgba(0, 255, 255, 0.1);
+            color: var(--terminal-info);
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            color: var(--terminal-text);
+        }
+
+        .screenshot-placeholder {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screenshot-placeholder h4 {
+            color: var(--terminal-secondary);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .screenshot-placeholder p {
+            color: var(--terminal-secondary);
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .project-header {
+                margin: 80px 0 30px 0;
+                padding: 20px;
+            }
+            
+            .project-header h1 {
+                font-size: 2em;
+            }
+            
+            .implementation-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .links-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .ascii-art {
+                font-size: 0.5em;
+            }
+
+            .comparison-table {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../../index.html">← Back to Terminal</a>
+    </div>
+
+    <div class="container">
+        <header class="project-header">
+            <h1>Personal Finance Tracker</h1>
+            <p class="project-subtitle">Finance Management Application</p>
+            <p class="project-description">
+                A personal finance tracking solution showcasing versatility in software development 
+                through two distinct implementations: a JavaFX desktop application and a Go-based web application. 
+                Both versions provide complete transaction management, financial summaries, and persistent data storage.
+            </p>
+            <div class="tech-stack">
+                <span class="tech-tag">Java</span>
+                <span class="tech-tag">JavaFX</span>
+                <span class="tech-tag">Go</span>
+                <span class="tech-tag">HTML/CSS</span>
+                <span class="tech-tag">Maven</span>
+                <span class="tech-tag">JSON</span>
+                <span class="tech-tag">RESTful API</span>
+            </div>
+        </header>
+
+        <section class="section">
+            <h2>Project Overview</h2>
+            <p>
+                The Personal Finance Tracker demonstrates full-stack development capabilities through two complete 
+                implementations of the same application concept. This project showcases the ability to work across 
+                different programming paradigms, from desktop GUI development to modern web applications.
+            </p>
+            <p>
+                Both implementations provide identical core functionality for managing personal finances, including 
+                transaction tracking, categorization, editing capabilities, and financial summaries. The project 
+                highlights different approaches to user interface design, data persistence, and application architecture.
+            </p>
+
+            <div class="implementation-grid">
+                <div class="implementation-card">
+                    <h4>🖥️ JavaFX Desktop Version</h4>
+                    <p>A native desktop application built with JavaFX, providing a rich GUI experience with native OS integration.</p>
+                    <ul class="tech-list">
+                        <li><span class="highlight">JavaFX</span> - Modern Java GUI framework</li>
+                        <li><span class="highlight">FXML</span> - Declarative UI markup</li>
+                        <li><span class="highlight">Maven</span> - Build automation and dependency management</li>
+                        <li><span class="highlight">Java Serialization</span> - Object persistence to .dat files</li>
+                        <li><span class="highlight">MVC Architecture</span> - Clean separation of concerns</li>
+                    </ul>
+                </div>
+
+                <div class="implementation-card">
+                    <h4>🌐 Go Web Version</h4>
+                    <p>A modern web application using Go's standard library, featuring RESTful APIs and responsive design.</p>
+                    <ul class="tech-list">
+                        <li><span class="highlight">Go HTTP Server</span> - Built-in web server capabilities</li>
+                        <li><span class="highlight">HTML Templates</span> - Server-side rendering</li>
+                        <li><span class="highlight">JSON Storage</span> - Human-readable data persistence</li>
+                        <li><span class="highlight">RESTful API</span> - Modern web service architecture</li>
+                        <li><span class="highlight">Responsive Design</span> - Mobile-friendly interface</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Core Features</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>💰 Transaction Management</h4>
+                    <p>Add, edit, and delete income and expense transactions with detailed descriptions and categorization.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>📊 Financial Summary</h4>
+                    <p>Real-time calculation of total income, expenses, and net cash flow with visual indicators.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>💾 Data Persistence</h4>
+                    <p>Automatic saving and loading of transaction data with error handling and data validation.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>🔍 Transaction Viewing</h4>
+                    <p>Comprehensive transaction listing with sorting and filtering capabilities for easy management.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>✏️ Edit Functionality</h4>
+                    <p>Modify existing transactions with form validation and immediate data updates.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>🗑️ Delete Operations</h4>
+                    <p>Safe transaction deletion with confirmation dialogs and automatic data synchronization.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section architecture-diagram">
+            <h2>Technical Architecture</h2>
+            
+            <h3>JavaFX Desktop Implementation</h3>
+            <ul class="component-list">
+                <li><span class="highlight">Main.java</span> - Application entry point and JavaFX stage setup</li>
+                <li><span class="highlight">Controller.java</span> - Main UI controller handling user interactions</li>
+                <li><span class="highlight">FinanceManager.java</span> - Core business logic and data management</li>
+                <li><span class="highlight">Transaction.java</span> - Data model with serialization support</li>
+                <li><span class="highlight">FXML Files</span> - Declarative UI layouts for different views</li>
+                <li><span class="highlight">Maven POM</span> - Dependency management and build configuration</li>
+            </ul>
+
+            <h3>Go Web Implementation</h3>
+            <ul class="component-list">
+                <li><span class="highlight">main.go</span> - HTTP server setup and route configuration</li>
+                <li><span class="highlight">handlers/</span> - HTTP request handlers for different endpoints</li>
+                <li><span class="highlight">models/</span> - Data structures and business logic</li>
+                <li><span class="highlight">templates/</span> - HTML templates for server-side rendering</li>
+                <li><span class="highlight">static/</span> - CSS and JavaScript assets</li>
+                <li><span class="highlight">JSON Storage</span> - File-based data persistence</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Implementation Comparison</h2>
+            
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>JavaFX Desktop</th>
+                        <th>Go Web</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>User Interface</strong></td>
+                        <td>Native desktop GUI with JavaFX controls</td>
+                        <td>Web-based HTML/CSS responsive interface</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Storage</strong></td>
+                        <td>Java serialization to .dat files</td>
+                        <td>JSON format for human-readable storage</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Architecture</strong></td>
+                        <td>MVC pattern with FXML separation</td>
+                        <td>HTTP handlers with template rendering</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Deployment</strong></td>
+                        <td>Standalone executable JAR file</td>
+                        <td>Web server accessible via browser</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Platform</strong></td>
+                        <td>Cross-platform desktop (JVM required)</td>
+                        <td>Any device with web browser</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Access</strong></td>
+                        <td>Direct method calls within application</td>
+                        <td>RESTful endpoints for external access</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <h2>Code Implementation Examples</h2>
+            
+            <h3>Java Transaction Model</h3>
+            <div class="code-block">
+                <pre><span class="keyword">public class</span> <span class="highlight">Transaction</span> <span class="keyword">implements</span> Serializable {
+    <span class="keyword">private int</span> id;
+    <span class="keyword">private</span> String type;
+    <span class="keyword">private double</span> amount;
+    <span class="keyword">private</span> String description;
+
+    <span class="keyword">public</span> <span class="highlight">Transaction</span>(<span class="keyword">int</span> id, String type, <span class="keyword">double</span> amount, String description) {
+        <span class="keyword">this</span>.id = id;
+        <span class="keyword">this</span>.type = type;
+        <span class="keyword">this</span>.amount = amount;
+        <span class="keyword">this</span>.description = description;
+    }
+
+    <span class="comment">// Getters and setters...</span>
+    
+    <span class="keyword">@Override</span>
+    <span class="keyword">public</span> String <span class="highlight">toString</span>() {
+        <span class="keyword">return</span> <span class="string">"Transaction "</span> + id + <span class="string">"\nType: "</span> + type + 
+               <span class="string">"\nAmount: "</span> + amount + <span class="string">"\nDescription: "</span> + description;
+    }
+}</pre>
+            </div>
+
+            <h3>Go HTTP Handler</h3>
+            <div class="code-block">
+                <pre><span class="keyword">func</span> (h *<span class="highlight">Handler</span>) <span class="highlight">AddTransactionHandler</span>(w http.ResponseWriter, r *http.Request) {
+    <span class="keyword">if</span> r.Method == <span class="string">"POST"</span> {
+        <span class="comment">// Parse form data</span>
+        transactionType := r.FormValue(<span class="string">"type"</span>)
+        amountStr := r.FormValue(<span class="string">"amount"</span>)
+        description := r.FormValue(<span class="string">"description"</span>)
+        
+        <span class="comment">// Convert amount to float</span>
+        amount, err := strconv.ParseFloat(amountStr, <span class="highlight">64</span>)
+        <span class="keyword">if</span> err != <span class="keyword">nil</span> {
+            http.Error(w, <span class="string">"Invalid amount"</span>, http.StatusBadRequest)
+            <span class="keyword">return</span>
+        }
+        
+        <span class="comment">// Create and add transaction</span>
+        transaction := models.NewTransaction(transactionType, amount, description)
+        h.financeManager.AddTransaction(transaction)
+        
+        <span class="comment">// Redirect to home page</span>
+        http.Redirect(w, r, <span class="string">"/"</span>, http.StatusSeeOther)
+    }
+}</pre>
+            </div>
+
+            <h3>Data Persistence - Java Serialization</h3>
+            <div class="code-block">
+                <pre><span class="keyword">private void</span> <span class="highlight">saveTransactions</span>() {
+    <span class="keyword">try</span> (ObjectOutputStream out = <span class="keyword">new</span> ObjectOutputStream(
+            <span class="keyword">new</span> FileOutputStream(filePath))) {
+        out.writeObject(transactions);
+    } <span class="keyword">catch</span> (IOException error) {
+        System.out.println(error);
+    }
+}
+
+<span class="keyword">public void</span> <span class="highlight">loadTransactions</span>() {
+    <span class="keyword">try</span> (ObjectInputStream in = <span class="keyword">new</span> ObjectInputStream(
+            <span class="keyword">new</span> FileInputStream(filePath))) {
+        transactions = (List&lt;Transaction&gt;) in.readObject();
+    } <span class="keyword">catch</span> (FileNotFoundException e) {
+        <span class="comment">// Show alert for new file</span>
+        Alert alert = <span class="keyword">new</span> Alert(Alert.AlertType.INFORMATION);
+        alert.setContentText(<span class="string">"No data found, starting fresh"</span>);
+        alert.showAndWait();
+    }
+}</pre>
+            </div>
+
+            <h3>Go JSON Storage</h3>
+            <div class="code-block">
+                <pre><span class="keyword">func</span> (fm *<span class="highlight">FinanceManager</span>) <span class="highlight">SaveTransactions</span>() <span class="keyword">error</span> {
+    data, err := json.MarshalIndent(fm.Transactions, <span class="string">""</span>, <span class="string">"  "</span>)
+    <span class="keyword">if</span> err != <span class="keyword">nil</span> {
+        <span class="keyword">return</span> err
+    }
+    
+    <span class="keyword">return</span> ioutil.WriteFile(fm.FilePath, data, <span class="highlight">0644</span>)
+}
+
+<span class="keyword">func</span> (fm *<span class="highlight">FinanceManager</span>) <span class="highlight">LoadTransactions</span>() <span class="keyword">error</span> {
+    data, err := ioutil.ReadFile(fm.FilePath)
+    <span class="keyword">if</span> err != <span class="keyword">nil</span> {
+        <span class="keyword">if</span> os.IsNotExist(err) {
+            <span class="comment">// File doesn't exist, start with empty slice</span>
+            fm.Transactions = []Transaction{}
+            <span class="keyword">return</span> <span class="keyword">nil</span>
+        }
+        <span class="keyword">return</span> err
+    }
+    
+    <span class="keyword">return</span> json.Unmarshal(data, &fm.Transactions)
+}</pre>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>User Interface Showcase</h2>
+            
+            <div class="screenshot-placeholder">
+                <img src="assets/java_ui.png" alt="JavaFX UI" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Native desktop application with table views, forms, and dialog boxes</p>
+            </div>
+
+            <div class="screenshot-placeholder">
+                <img src="assets/golang_ui.png" alt="Golang UI" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Responsive web application with HTML forms and dynamic content</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Development Highlights</h2>
+            
+            <h3>Cross-Platform Development</h3>
+            <p>
+                This project demonstrates proficiency in multiple programming languages and frameworks, 
+                showcasing the ability to implement the same business logic using different technological approaches.
+            </p>
+
+            <h3>Data Persistence Strategies</h3>
+            <p>
+                Two different approaches to data storage: Java serialization for binary efficiency and JSON 
+                for human readability and cross-platform compatibility. Both implementations include proper 
+                error handling and data validation.
+            </p>
+
+            <h3>User Interface Design</h3>
+            <p>
+                Comparison between native desktop GUI development using JavaFX and modern web interface 
+                design with HTML/CSS. Both interfaces provide intuitive user experiences while leveraging 
+                their respective platform strengths.
+            </p>
+
+            <h3>Architecture Patterns</h3>
+            <p>
+                Implementation of MVC (Model-View-Controller) pattern in JavaFX version and RESTful 
+                architecture in the Go web version, demonstrating understanding of different architectural 
+                approaches for different platforms.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>Future Enhancements</h2>
+            
+            <ul class="component-list">
+                <li>Date-based transaction filtering and reporting</li>
+                <li>Category-based expense tracking and budgeting</li>
+                <li>Data visualization with charts and graphs</li>
+                <li>Import/export functionality for CSV and other formats</li>
+                <li>Multi-user support with authentication</li>
+                <li>Mobile application versions (Android/iOS)</li>
+                <li>Cloud synchronization and backup</li>
+                <li>Advanced reporting and analytics features</li>
+            </ul>
+        </section>
+
+        <div class="links-section">
+            <a href="https://github.com/camster811/personal-finance-tracker" class="project-link" target="_blank">
+                🐙 View on GitHub
+            </a>
+        </div>
+
+        <div class="ascii-art">
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                    Financial Management                      ║
+    ║              Desktop • Web • Cross-Platform                  ║
+    ╚══════════════════════════════════════════════════════════════╝
+        </div>
+    </div>
+</body>
+</html>
