@@ -1,1 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me - Portfolio Terminal</title>
+    <meta name="description" content="About me - Full-Stack Developer passionate about creating innovative web solutions">
+    
+    <style>
+        :root {
+            --terminal-bg: #0c0c0c;
+            --terminal-text: #00ff00;
+            --terminal-prompt: #ffff00;
+            --terminal-error: #ff0000;
+            --terminal-info: #00ffff;
+            --terminal-warning: #ffa500;
+            --terminal-accent: #ff00ff;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--terminal-bg);
+            color: var(--terminal-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--terminal-bg);
+            color: var(--terminal-info);
+            text-decoration: none;
+            padding: 10px 15px;
+            border: 2px solid var(--terminal-info);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button a:hover {
+            background: var(--terminal-info);
+            color: var(--terminal-bg);
+        }
+
+        .about-header {
+            text-align: center;
+            margin: 60px 0 40px 0;
+            padding: 40px 20px;
+            border: 2px solid var(--terminal-info);
+            border-radius: 8px;
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .about-header h1 {
+            color: var(--terminal-info);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--terminal-info);
+        }
+
+        .about-subtitle {
+            color: var(--terminal-text);
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .about-intro {
+            color: var(--terminal-warning);
+            font-size: 1.1em;
+            font-style: italic;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .content-section {
+            background: rgba(0, 255, 0, 0.05);
+            border: 1px solid var(--terminal-text);
+            border-radius: 8px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .content-section:hover {
+            border-color: var(--terminal-info);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .section-title {
+            color: var(--terminal-info);
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section-content {
+            color: var(--terminal-text);
+            font-size: 1em;
+            line-height: 1.8;
+        }
+
+        .section-content p {
+            margin-bottom: 15px;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .skill-category {
+            background: rgba(255, 255, 0, 0.1);
+            border: 1px solid var(--terminal-prompt);
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .skill-category h4 {
+            color: var(--terminal-prompt);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            color: var(--terminal-text);
+            margin-bottom: 5px;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .skill-list li:before {
+            content: "▶";
+            color: var(--terminal-info);
+            position: absolute;
+            left: 0;
+        }
+
+        .contact-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--terminal-info);
+            text-decoration: none;
+            padding: 10px 15px;
+            border: 1px solid var(--terminal-info);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-link:hover {
+            background: var(--terminal-info);
+            color: var(--terminal-bg);
+            transform: translateY(-2px);
+        }
+
+        .timeline {
+            margin-top: 30px;
+        }
+
+        .timeline-item {
+            border-left: 2px solid var(--terminal-info);
+            padding-left: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-item:before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background: var(--terminal-info);
+            border-radius: 50%;
+            position: absolute;
+            left: -6px;
+            top: 5px;
+        }
+
+        .timeline-date {
+            color: var(--terminal-warning);
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .timeline-title {
+            color: var(--terminal-info);
+            font-size: 1.2em;
+            margin: 5px 0;
+        }
+
+        .timeline-description {
+            color: var(--terminal-text);
+            line-height: 1.6;
+        }
+
+        .ascii-art {
+            color: var(--terminal-accent);
+            white-space: pre;
+            font-size: 0.8em;
+            text-align: center;
+            margin: 40px 0;
+            line-height: 1.2;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .about-header {
+                margin: 80px 0 30px 0;
+                padding: 20px;
+            }
+            
+            .about-header h1 {
+                font-size: 2em;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .contact-links {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .ascii-art {
+                font-size: 0.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../index.html">← Back to Terminal</a>
+    </div>
+
+    <div class="container">
+        <header class="about-header">
+            <h1>About Me</h1>
+            <p class="about-subtitle">Full-Stack Developer & Problem Solver</p>
+        </header>
+
+        <div class="content-grid">
+            <div class="content-section">
+                <h2 class="section-title">My Story</h2>
+                <div class="section-content">
+                    <p>
+                        I'm Cameron Stanford, a Computer Science student at Auburn University pursuing a Bachelor's 
+                        degree with a Master's in Cybersecurity, complemented by certificates in cyber defense and
+                        in AI. My journey in technology began with curiosity about how systems work and has evolved 
+                        into a passion for cybersecurity, reverse engineering, and full-stack development.
+                    </p>
+                    <p>
+                        Most recently serving as a Cybersecurity Intern at Auburn's Program Understanding Lab, I lead 
+                        the development of web applications that interface with lab-developed reverse engineering tools. 
+                        My work involves creating intuitive visualizations for complex binary analysis data using modern web technologies.
+                    </p>
+                    <p>
+                        Beyond academics and internships, I'm an entrepreneur running Solis Strategies LLC, where I've 
+                        developed a proprietary stock trading system with impressive results. When I'm not coding or 
+                        analyzing markets, you'll find me practicing Jiu-Jitsu, powerlifting, or contributing to 
+                        open-source projects that push the boundaries of cybersecurity and software development.
+                    </p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Technical Skills</h2>
+                <div class="section-content">
+                    <div class="skills-grid">
+                        <div class="skill-category">
+                            <h4>Frontend</h4>
+                            <ul class="skill-list">
+                                <li>Vue.js & Nuxt.js</li>
+                                <li>JavaScript (ES6+)</li>
+                                <li>HTML5 & CSS3</li>
+                                <li>D3.js & Chart.js</li>
+                                <li>Cytoscape.js</li>
+                                <li>Responsive Design</li>
+                                <li>JavaFX (Desktop)</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4>Backend</h4>
+                            <ul class="skill-list">
+                                <li>Python & FastAPI</li>
+                                <li>Go (Golang)</li>
+                                <li>Java</li>
+                                <li>RESTful APIs</li>
+                                <li>Async Programming</li>
+                                <li>Uvicorn & Maven</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4>AI/ML & NLP</h4>
+                            <ul class="skill-list">
+                                <li>spaCy NLP</li>
+                                <li>Named Entity Recognition</li>
+                                <li>Text Processing</li>
+                                <li>Machine Learning</li>
+                                <li>Data Visualization</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4>DevOps & Tools</h4>
+                            <ul class="skill-list">
+                                <li>Docker & Containerization</li>
+                                <li>GitHub Actions CI/CD</li>
+                                <li>pytest & Testing</li>
+                                <li>Git & Version Control</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4>Desktop & Systems</h4>
+                            <ul class="skill-list">
+                                <li>Electron Applications</li>
+                                <li>Cross-platform Development</li>
+                                <li>Binary Analysis</li>
+                                <li>Reverse Engineering</li>
+                                <li>System Integration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Experience</h2>
+                <div class="section-content">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">July 2024 - May 2025</div>
+                            <div class="timeline-title">Cybersecurity Intern - Auburn Program Understanding Lab</div>
+                            <div class="timeline-description">
+                                Collaborated with a team to analyze unknown firmware files. 
+                                Served as project lead creating a web app interface for the lab's reverse engineering tool using 
+                                JavaScript, Python, Vue.js, Node.js, and FastAPI. Contribute to open source tools by building 
+                                modules that provide useful file information such as binary entropy with web app visualizations.
+                                Built a web app tree creator and editor for genetic algorithm analysis.
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">May 2021 - Present</div>
+                            <div class="timeline-title">Owner - Solis Strategies, LLC</div>
+                            <div class="timeline-description">
+                                Developed and tested a proprietary stock trading system using the Thinkscript language. 
+                                Over 3+ years, executed 472 trades with an average return of 56% and a 76% win rate. 
+                                Built a subscription service with 30+ users interested in monthly trading system picks.
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">May 2023 - August 2023</div>
+                            <div class="timeline-title">Counselor - Kanakuk Camps</div>
+                            <div class="timeline-description">
+                                Collaborated with co-counselor to oversee three groups of 8-10 campers over four-week periods. 
+                                Led daily schedules and activities while nurturing campers' confidence, values, and personal growth 
+                                through mentorship. Demonstrated versatility by embracing new challenges and environments.
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">August 2022 - Present</div>
+                            <div class="timeline-title">Computer Science Student - Auburn University</div>
+                            <div class="timeline-description">
+                                Pursuing Bachelor's in Computer Science with Master's in Cybersecurity, Minor in Finance, 
+                                and Certificates in AI and Cyber Defense. Maintaining 3.6 GPA while earning Auburn Presidential Scholarship 
+                                and Phi Theta Kappa Honor Society recognition. Expected graduation Spring 2026.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Philosophy</h2>
+                <div class="section-content">
+                    <p>
+                        <strong>Clean Code:</strong> I believe in writing code that is not just functional, but readable, 
+                        maintainable, and elegant. Every line should have a purpose.
+                    </p>
+                    <p>
+                        <strong>User-Centric Design:</strong> Technology should serve people, not the other way around. 
+                        I prioritize user experience in every project I work on.
+                    </p>
+                    <p>
+                        <strong>Continuous Learning:</strong> The tech industry evolves rapidly, and I'm committed to 
+                        staying current with new technologies, frameworks, and best practices.
+                    </p>
+                    <p>
+                        <strong>Collaboration:</strong> The best solutions come from diverse perspectives. I value 
+                        teamwork, code reviews, and knowledge sharing.
+                    </p>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h2 class="section-title">Let's Connect</h2>
+                <div class="section-content">
+                    <p>
+                        I'm always interested in discussing new projects, sharing knowledge, or just talking about 
+                        technology. Feel free to reach out through any of these channels:
+                    </p>
+                    <div class="contact-links">
+                        <a href="https://github.com/camster811" class="contact-link" target="_blank">
+                            GitHub
+                        </a>
+                        <a href="https://www.linkedin.com/in/cameron-stanford-1b48b9297/" class="contact-link" target="_blank">
+                            LinkedIn
+                        </a>
+                        <a href="mailto:cls0150@auburn.edu" class="contact-link">
+                            Email
+                        </a>
+                        <a href="https://program-understanding.github.io/" class="contact-link" target="_blank">
+                            Research Lab
+                        </a>
+                        <a href="https://tinyurl.com/SOLISTRADING" class="contact-link" target="_blank">
+                            Solis Strategies
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ascii-art">
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                    Thanks for visiting!                      ║
+    ║              Let's build something amazing together          ║
+    ╚══════════════════════════════════════════════════════════════╝
+        </div>
+    </div>
+</body>
+</html>
