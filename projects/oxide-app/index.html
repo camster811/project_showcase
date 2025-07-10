@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oxide App - Binary Analysis & Visualization Tool</title>
+    <meta name="description" content="Advanced binary analysis and reverse engineering tool with interactive visualizations">
+    
+    <style>
+        :root {
+            --terminal-bg: #0c0c0c;
+            --terminal-text: #00ff00;
+            --terminal-prompt: #ffff00;
+            --terminal-error: #ff0000;
+            --terminal-info: #00ffff;
+            --terminal-warning: #ffa500;
+            --terminal-accent: #ff00ff;
+            --terminal-secondary: #9dbaea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--terminal-bg);
+            color: var(--terminal-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--terminal-bg);
+            color: var(--terminal-info);
+            text-decoration: none;
+            padding: 10px 15px;
+            border: 2px solid var(--terminal-info);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button a:hover {
+            background: var(--terminal-info);
+            color: var(--terminal-bg);
+        }
+
+        .project-header {
+            text-align: center;
+            margin: 60px 0 40px 0;
+            padding: 40px 20px;
+            border: 2px solid var(--terminal-info);
+            border-radius: 8px;
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .project-header h1 {
+            color: var(--terminal-info);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--terminal-info);
+        }
+
+        .project-subtitle {
+            color: var(--terminal-warning);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .project-description {
+            color: var(--terminal-text);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .tech-tag {
+            background: rgba(255, 255, 0, 0.1);
+            color: var(--terminal-prompt);
+            padding: 5px 12px;
+            border: 1px solid var(--terminal-prompt);
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .section {
+            margin: 40px 0;
+            padding: 30px;
+            border: 1px solid var(--terminal-text);
+            border-radius: 8px;
+            background: rgba(0, 255, 0, 0.02);
+        }
+
+        .section h2 {
+            color: var(--terminal-info);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section h3 {
+            color: var(--terminal-warning);
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+            border-bottom: 1px solid var(--terminal-warning);
+            padding-bottom: 5px;
+        }
+
+        .section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--terminal-info);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--terminal-warning);
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.2);
+        }
+
+        .feature-card h4 {
+            color: var(--terminal-info);
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--terminal-text);
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+
+        .feature-tech {
+            color: var(--terminal-accent);
+            font-size: 0.85em;
+            font-style: italic;
+        }
+
+        .photo-placeholder {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed var(--terminal-secondary);
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-placeholder h4 {
+            color: var(--terminal-secondary);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .photo-placeholder p {
+            color: var(--terminal-secondary);
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .architecture-diagram {
+            background: rgba(255, 0, 255, 0.05);
+            border: 1px solid var(--terminal-accent);
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .architecture-diagram h3 {
+            color: var(--terminal-accent);
+            border-bottom-color: var(--terminal-accent);
+        }
+
+        .component-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .component-list li {
+            color: var(--terminal-text);
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .component-list li:before {
+            content: "▶";
+            color: var(--terminal-info);
+            position: absolute;
+            left: 0;
+        }
+
+        .links-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--terminal-info);
+            text-decoration: none;
+            padding: 12px 20px;
+            border: 2px solid var(--terminal-info);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .project-link:hover {
+            background: var(--terminal-info);
+            color: var(--terminal-bg);
+            transform: translateY(-2px);
+        }
+
+        .ascii-art {
+            color: var(--terminal-accent);
+            white-space: pre;
+            font-size: 0.7em;
+            text-align: center;
+            margin: 40px 0;
+            line-height: 1.2;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--terminal-text);
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .highlight {
+            color: var(--terminal-warning);
+            font-weight: bold;
+        }
+
+        .photo-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .photo-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 2px solid var(--terminal-info);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .photo-container img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .photo-container p {
+            color: var(--terminal-info);
+            font-style: italic;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .project-header {
+                margin: 80px 0 30px 0;
+                padding: 20px;
+            }
+            
+            .project-header h1 {
+                font-size: 2em;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .links-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .ascii-art {
+                font-size: 0.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../../index.html">← Back to Terminal</a>
+    </div>
+
+    <div class="container">
+        <header class="project-header">
+            <h1>Oxide Webapp</h1>
+            <p class="project-subtitle">Binary Analysis & Visualization Tool</p>
+            <p class="project-description">
+                A desktop and web application for binary analysis, reverse engineering, and malware research. 
+                Features interactive visualizations, statistical analysis, and disassembly capabilities 
+                built with modern web technologies and packaged as an Electron application.
+            </p>
+            <div class="tech-stack">
+                <span class="tech-tag">Vue.js</span>
+                <span class="tech-tag">Nuxt.js</span>
+                <span class="tech-tag">Electron</span>
+                <span class="tech-tag">D3.js</span>
+                <span class="tech-tag">Chart.js</span>
+                <span class="tech-tag">Cytoscape.js</span>
+                <span class="tech-tag">Python</span>
+                <span class="tech-tag">PrimeVue</span>
+                <span class="tech-tag">Tailwind CSS</span>
+            </div>
+        </header>
+
+        <section class="section">
+            <h2>Project Overview</h2>
+            <p>
+                Oxide App represents the cutting edge of binary analysis tools, combining powerful reverse engineering 
+                capabilities with intuitive visual interfaces. Designed for security researchers, malware analysts, 
+                and reverse engineers, this application takes binary data and turns it into comprehensible visual 
+                representations.
+            </p>
+
+            <div class="photo-container">
+                <img src="assets/home_page.png" alt="Oxide App Main Dashboard" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Main Dashboard - Navigation interface showing all available tools</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Core Visualization Modules</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>Binary Visualizer</h4>
+                    <p>Interactive grid-based visualization of raw binary data with color-coded byte values using D3.js viridis color scale. Features real-time hover tooltips showing decimal, hexadecimal, and binary representations.</p>
+                    <p class="feature-tech">Technologies: D3.js, Canvas API, Vue.js</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Byte Histogram</h4>
+                    <p>Statistical frequency analysis of byte distribution with logarithmic scaling. Provides insights into data patterns and helps identify encrypted or compressed sections.</p>
+                    <p class="feature-tech">Technologies: Chart.js, Statistical Analysis</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Byte N-grams Analysis</h4>
+                    <p>Matrix-based heatmap visualization of byte sequence patterns. Uses advanced matrix rendering to identify common byte patterns and sequences in binary data.</p>
+                    <p class="feature-tech">Technologies: chartjs-chart-matrix, Heatmap Algorithms</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Call Graph Visualization</h4>
+                    <p>Interactive network visualization of function call relationships with hierarchical layouts. Shows incoming/outgoing call counts and directed graph representations.</p>
+                    <p class="feature-tech">Technologies: vis-network, Graph Theory</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Control Flow Graph</h4>
+                    <p>Advanced program flow analysis using Cytoscape.js with function selector and interactive block visualization. Supports both control flow and call graph overlays.</p>
+                    <p class="feature-tech">Technologies: Cytoscape.js, Dagre Layout</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Entropy Analysis</h4>
+                    <p>Statistical entropy analysis across memory addresses with line charts and detailed metrics tables. Identifies encrypted/compressed sections by entropy spikes.</p>
+                    <p class="feature-tech">Technologies: Chart.js, PrimeVue DataTable</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Opcode Histogram</h4>
+                    <p>Assembly instruction frequency analysis with automatic logarithmic/linear scale switching. Helps identify compiler patterns and code characteristics.</p>
+                    <p class="feature-tech">Technologies: Chart.js, Assembly Analysis</p>
+                </div>
+            </div>
+
+            <div class="photo-container">
+                <img src="assets/binary_visualizer.png" alt="Binary Visualizer Grid" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Binary Visualizer - Interactive grid showing color-coded byte values with hover information</p>
+            </div>
+
+            <div class="photo-container">
+                <img src="assets/cfg.png" alt="Control Flow Graph" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Control Flow Graph - Interactive visualization of program execution flow with function blocks</p>
+            </div>
+        </section>
+
+        <section class="section architecture-diagram">
+            <h2>Technical Architecture</h2>
+            
+            <h3>Frontend Architecture</h3>
+            <ul class="component-list">
+                <li><span class="highlight">Nuxt.js 3</span> - Vue.js framework with SSR capabilities</li>
+                <li><span class="highlight">Vue 3 Composition API</span> - Reactive component architecture</li>
+                <li><span class="highlight">PrimeVue</span> - Enterprise-grade UI component library</li>
+                <li><span class="highlight">Tailwind CSS</span> - Utility-first CSS framework</li>
+            </ul>
+
+            <h3>Visualization Libraries</h3>
+            <ul class="component-list">
+                <li><span class="highlight">D3.js</span> - Data-driven document manipulation for binary grids</li>
+                <li><span class="highlight">Chart.js</span> - Responsive charts for histograms and line graphs</li>
+                <li><span class="highlight">Cytoscape.js</span> - Graph theory library for control flow graphs</li>
+                <li><span class="highlight">vis-network</span> - Network visualization for call graphs</li>
+                <li><span class="highlight">chartjs-chart-matrix</span> - Matrix/heatmap chart extensions</li>
+            </ul>
+
+            <h3>Desktop Integration</h3>
+            <ul class="component-list">
+                <li><span class="highlight">Electron</span> - Cross-platform desktop application framework</li>
+                <li><span class="highlight">nuxt-electron</span> - Nuxt.js integration with Electron</li>
+                <li><span class="highlight">electron-builder</span> - Application packaging and distribution</li>
+            </ul>
+
+            <h3>Backend & API</h3>
+            <ul class="component-list">
+                <li><span class="highlight">Python API Server</span> - Backend server interacting with Oxide (Oxide-Formula)</li>
+                <li><span class="highlight">RESTful API</span> - HTTP-based communication protocol</li>
+                <li><span class="highlight">Oxide Engine</span> - Core analysis modules and disassembly</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Key Features & Capabilities</h2>
+            
+            <h3>Interactive Analysis</h3>
+            <p>
+                Real-time binary analysis with interactive tooltips, hover states, and dynamic data exploration. 
+                Users can navigate through  binary structures with mouse interactions and 
+                keyboard shortcuts.
+            </p>
+
+            <h3>Export Capabilities</h3>
+            <p>
+                Export functionality supporting SVG and PNG formats for all visualizations. 
+                Charts and graphs can be exported with custom backgrounds and high-resolution settings 
+                for presentations and reports.
+            </p>
+
+            <h3>Advanced Graph Algorithms</h3>
+            <p>
+                Implementation of graph layout algorithms including Dagre for hierarchical 
+                layouts and force-directed positioning for optimal node arrangement in call graphs 
+                and control flow visualizations.
+            </p>
+
+            <h3>Statistical Analysis</h3>
+            <p>
+                Statistical analysis including entropy calculations, frequency distributions, 
+                n-gram analysis, and pattern recognition algorithms to identify anomalies and characteristics 
+                in binary data.
+            </p>
+
+            <div class="photo-container">
+                <img src="assets/entropy_chart.png" alt="Entropy Analysis Chart" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Entropy Analysis - Statistical entropy visualization with detailed metrics table</p>
+            </div>
+
+            <div class="photo-container">
+                <img src="assets/call_graph.png" alt="Call Graph Network" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Call Graph - Interactive network visualization showing function call relationships</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Development Highlights</h2>
+            
+            <h3>Modern Development Practices</h3>
+            <p>
+                Built using modern JavaScript frameworks, component-based 
+                architecture for maintainability, and reactive programming patterns for optimal performance.
+            </p>
+
+            <h3>Cross-Platform Compatibility</h3>
+            <p>
+                Leverages Electron's cross-platform capabilities to deliver a consistent experience across 
+                Windows, macOS, and Linux while maintaining native desktop integration and performance.
+            </p>
+
+            <h3>Scalable Architecture</h3>
+            <p>
+                Modular component design allows for easy extension and maintenance. Each visualization 
+                module is self-contained with its own data fetching, rendering, and export capabilities.
+            </p>
+
+            <div class="photo-container">
+                <img src="assets/basic_modules.png" alt="Basic Modules Overview" style="width: 100%; max-width: 800px; border-radius: 8px; border: 2px solid var(--terminal-info);">
+                <p style="text-align: center; margin-top: 10px; color: var(--terminal-info); font-style: italic;">Basic Modules - Overview of the modular component architecture and available analysis tools</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Installation & Usage</h2>
+            
+            <h3>Development Setup</h3>
+            <div class="code-block">
+# Clone the repository
+git clone https://github.com/yourusername/oxide-app.git
+cd oxide-app
+
+# Install dependencies
+npm install
+cd client && npm install
+
+# Start development servers
+./run.sh  # Starts both client and API server
+            </div>
+
+            <h3>System Requirements</h3>
+            <ul class="component-list">
+                <li>Node.js 16+ and npm/yarn package manager</li>
+                <li>Python 3.8+ for the analysis backend</li>
+                <li>Modern web browser with WebGL support</li>
+                <li>Minimum 4GB RAM for large binary analysis</li>
+                <li>Graphics card with hardware acceleration recommended</li>
+            </ul>
+        </section>
+
+        <div class="links-section">
+            <a href="https://github.com/camster811/oxide-app" class="project-link" target="_blank">
+                🐙 View on GitHub
+            </a>
+            <a href="https://github.com/Program-Understanding/oxide" class="project-link">
+                📖 Usage with Oxide
+            </a>
+        </div>
+
+        <div class="ascii-art">
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                    Advanced Binary Analysis                  ║
+    ║              Visualization • Analysis • Research             ║
+    ╚══════════════════════════════════════════════════════════════╝
+        </div>
+    </div>
+</body>
+</html>
