@@ -1,1 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Terminal - Developer Showcase</title>
+    <meta name="description" content="Interactive terminal-style portfolio showcasing development projects">
+    <meta name="keywords" content="developer, portfolio, terminal, projects, github, netlify">
+    
+    <!-- Vue.js 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Terminal Styles -->
+    <style>
+        :root {
+            --terminal-bg: #0c0c0c;
+            --terminal-text: #00ff00;
+            --terminal-prompt: #ffff00;
+            --terminal-error: #ff0000;
+            --terminal-info: #00ffff;
+            --terminal-warning: #ffa500;
+        }
 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--terminal-bg);
+            color: var(--terminal-text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .terminal-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .terminal-header {
+            border-bottom: 1px solid var(--terminal-text);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .terminal-title {
+            color: var(--terminal-info);
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--terminal-text) var(--terminal-bg);
+        }
+
+        .terminal-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-output::-webkit-scrollbar-track {
+            background: var(--terminal-bg);
+        }
+
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: var(--terminal-text);
+            border-radius: 4px;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+
+        .prompt {
+            color: var(--terminal-prompt);
+        }
+
+        .error {
+            color: var(--terminal-error);
+        }
+
+        .info {
+            color: var(--terminal-info);
+        }
+
+        .warning {
+            color: var(--terminal-warning);
+        }
+
+        .terminal-input-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            border-top: 1px solid var(--terminal-text);
+            padding-top: 10px;
+        }
+
+        .terminal-prompt {
+            color: var(--terminal-prompt);
+            margin-right: 10px;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--terminal-text);
+            font-family: inherit;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .cursor {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .ascii-art {
+            color: var(--terminal-info);
+            white-space: pre;
+            font-size: 0.8em;
+            margin: 10px 0;
+        }
+
+        .project-link {
+            color: var(--terminal-info);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .project-link:hover {
+            color: var(--terminal-warning);
+        }
+
+        @media (max-width: 768px) {
+            .terminal-container {
+                padding: 10px;
+            }
+            
+            .ascii-art {
+                font-size: 0.6em;
+            }
+            
+            body {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <terminal></terminal>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        // Project data
+        const projectsData = [
+            {
+                name: "oxide-app",
+                title: "Binary Analysis & Visualization Tool Webapp",
+                description: "Binary analysis and reverse engineering tool with interactive visualizations using the Oxide framework",
+                technologies: ["Vue.js", "Nuxt.js", "Electron", "D3.js", "Chart.js", "Cytoscape.js"],
+                github: "https://github.com/camster811/oxide-app",
+                status: "In progress - differ and binary mapper incomplete",
+                featured: true
+            },
+            {
+                name: "oxide-formula",
+                title: "Oxide-Formula API Server",
+                description: "FastAPI backend server for Oxide App - bridges web frontend to binary analysis engine",
+                technologies: ["Python", "FastAPI", "Uvicorn", "RESTful API", "CORS", "Async"],
+                github: "https://github.com/camster811/oxide-formula",
+                status: "completed",
+                featured: true
+            },
+            {
+                name: "personal-finance-tracker",
+                title: "Personal Finance Tracker",
+                description: "Multi-language implemented finance management app - JavaFX desktop & Go web versions",
+                technologies: ["Java", "JavaFX", "Go", "HTML/CSS", "Maven", "JSON", "RESTful API"],
+                github: "https://github.com/camster811/personal-finance-tracker",
+                status: "completed",
+                featured: true
+            },
+            {
+                name: "spacy-redactor",
+                title: "spaCy Text Redactor",
+                description: "Async text redaction service using FastAPI, spaCy NLP, and intelligent inference",
+                technologies: ["Python", "FastAPI", "spaCy", "asyncio", "Docker", "pytest", "NLP", "CI/CD"],
+                github: "https://github.com/camster811/spacy-redactor",
+                status: "completed",
+                featured: true
+            }
+        ];
+
+        const Terminal = {
+            data() {
+                return {
+                    output: [],
+                    currentInput: '',
+                    commandHistory: [],
+                    historyIndex: -1,
+                    projects: projectsData
+                };
+            },
+            mounted() {
+                this.showWelcome();
+                this.$refs.input.focus();
+            },
+            methods: {
+                showWelcome() {
+                    const asciiArt = `
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                    PORTFOLIO TERMINAL                     ║
+    ║                   Developer Showcase                      ║
+    ╚═══════════════════════════════════════════════════════════╝
+    `;
+                    
+                    this.output.push({
+                        type: 'ascii',
+                        content: asciiArt
+                    });
+                    
+                    this.output.push({
+                        type: 'info',
+                        content: 'Welcome to my interactive portfolio terminal! Press tab or click the input field to start typing commands.'
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: 'Type "help" to see available commands.'
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: ''
+                    });
+                },
+                
+                handleCommand() {
+                    const command = this.currentInput.trim();
+                    if (command) {
+                        this.commandHistory.push(command);
+                        this.historyIndex = this.commandHistory.length;
+                        
+                        this.output.push({
+                            type: 'prompt',
+                            content: `$ ${command}`
+                        });
+                        
+                        this.executeCommand(command);
+                    }
+                    this.currentInput = '';
+                    this.$nextTick(() => {
+                        this.scrollToBottom();
+                    });
+                },
+                
+                executeCommand(command) {
+                    const [cmd, ...args] = command.toLowerCase().split(' ');
+                    
+                    // Clear previous output before showing new command results (except for clear command)
+                    if (cmd !== 'clear') {
+                        this.output = [];
+                        this.showWelcome();
+                    }
+                    
+                    switch (cmd) {
+                        case 'help':
+                            this.showHelp();
+                            break;
+                        case 'ls':
+                            this.listProjects();
+                            break;
+                        case 'cat':
+                            this.showProject(args[0]);
+                            break;
+                        case 'open':
+                            this.openProject(args[0]);
+                            break;
+                        case 'github':
+                            this.openGithub(args[0]);
+                            break;
+                        case 'about':
+                            this.openAbout();
+                            break;
+                        case 'contact':
+                            this.showContact();
+                            break;
+                        case 'clear':
+                            this.clearTerminal();
+                            break;
+                        case 'whoami':
+                            this.showWhoami();
+                            break;
+                        default:
+                            this.output.push({
+                                type: 'error',
+                                content: `Command not found: ${cmd}. Type "help" for available commands.`
+                            });
+                    }
+                },
+                
+                showHelp() {
+                    const helpText = [  
+                        'Available commands:',
+                        '',
+                        '  help                 - Show this help message',
+                        '  ls                   - List all projects',
+                        '  cat <project>        - Show project details',
+                        '  open <project>       - Open project detail page',
+                        '  github <project>     - Open GitHub repository',
+                        '  about                - About me',
+                        '  contact              - Contact information',
+                        '  whoami               - Current user info',
+                        '  clear                - Clear terminal',
+                        '',
+                        'Examples:',
+                        '  ls',
+                        '  cat example-project-1',
+                        '  live example-project-1',
+                        ''
+                    ];
+                    
+                    helpText.forEach(line => {
+                        this.output.push({
+                            type: line.startsWith('  ') ? 'info' : 'normal',
+                            content: line
+                        });
+                    });
+                },
+                
+                listProjects() {
+                    this.output.push({
+                        type: 'info',
+                        content: 'Projects:'
+                    });
+                    
+                    this.projects.forEach(project => {
+                        const status = project.featured ? '★' : ' ';
+                        const statusText = project.status === 'completed' ? '✓' : '⚠';
+                        this.output.push({
+                            type: 'normal',
+                            content: `  ${status} ${project.name.padEnd(20)} ${statusText} ${project.title}`
+                        });
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: ''
+                    });
+                    
+                    this.output.push({
+                        type: 'info',
+                        content: 'Use "cat <project-name>" to view details'
+                    });
+                },
+                
+                showProject(projectName) {
+                    if (!projectName) {
+                        this.output.push({
+                            type: 'error',
+                            content: 'Usage: cat <project-name>'
+                        });
+                        return;
+                    }
+                    
+                    const project = this.projects.find(p => p.name === projectName);
+                    if (!project) {
+                        this.output.push({
+                            type: 'error',
+                            content: `Project "${projectName}" not found. Use "ls" to see available projects.`
+                        });
+                        return;
+                    }
+                    
+                    this.output.push({
+                        type: 'info',
+                        content: `Project: ${project.title}`
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: `Description: ${project.description}`
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: `Technologies: ${project.technologies.join(', ')}`
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: `Status: ${project.status}`
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: `GitHub: ${project.github}`
+                    });
+                    
+                    this.output.push({
+                        type: 'normal',
+                        content: ''
+                    });
+                },
+                
+                openProject(projectName) {
+                    if (!projectName) {
+                        this.output.push({
+                            type: 'error',
+                            content: 'Usage: open <project-name>'
+                        });
+                        return;
+                    }
+                    
+                    const project = this.projects.find(p => p.name === projectName);
+                    if (!project) {
+                        this.output.push({
+                            type: 'error',
+                            content: `Project "${projectName}" not found.`
+                        });
+                        return;
+                    }
+                    
+                    this.output.push({
+                        type: 'info',
+                        content: `Opening project detail page for ${project.title}...`
+                    });
+                    
+                    // Navigate to project detail page
+                    window.location.href = `projects/${projectName}/index.html`;
+                },
+            
+                
+                openGithub(projectName) {
+                    if (!projectName) {
+                        this.output.push({
+                            type: 'error',
+                            content: 'Usage: github <project-name>'
+                        });
+                        return;
+                    }
+                    
+                    const project = this.projects.find(p => p.name === projectName);
+                    if (!project) {
+                        this.output.push({
+                            type: 'error',
+                            content: `Project "${projectName}" not found.`
+                        });
+                        return;
+                    }
+                    
+                    this.output.push({
+                        type: 'info',
+                        content: `Opening GitHub repository: ${project.github}`
+                    });
+                    
+                    window.open(project.github, '_blank');
+                },
+                
+                openAbout() {
+                    this.output.push({
+                        type: 'info',
+                        content: 'Opening About Me page...'
+                    });
+                    
+                    // Navigate to about page
+                    window.location.href = 'about/index.html';
+                },
+                
+                
+                showContact() {
+                    const contactText = [
+                        'Contact Information:',
+                        '',
+                        'GitHub: https://github.com/camster811',
+                        'LinkedIn: https://www.linkedin.com/in/cameron-stanford-1b48b9297/',
+                        'Email: cls0150@auburn.edu',
+                        'Portfolio: https://yourportfolio.netlify.app',
+                        ''
+                    ];
+                    
+                    contactText.forEach(line => {
+                        this.output.push({
+                            type: line === 'Contact Information:' ? 'info' : 'normal',
+                            content: line
+                        });
+                    });
+                },
+                
+                showWhoami() {
+                    this.output.push({
+                        type: 'normal',
+                        content: 'guest@portfolio-terminal'
+                    });
+                },
+                
+                clearTerminal() {
+                    this.output = [];
+                    this.showWelcome();
+                },
+                
+                handleKeydown(event) {
+                    if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        if (this.historyIndex > 0) {
+                            this.historyIndex--;
+                            this.currentInput = this.commandHistory[this.historyIndex];
+                        }
+                    } else if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        if (this.historyIndex < this.commandHistory.length - 1) {
+                            this.historyIndex++;
+                            this.currentInput = this.commandHistory[this.historyIndex];
+                        } else {
+                            this.historyIndex = this.commandHistory.length;
+                            this.currentInput = '';
+                        }
+                    } else if (event.key === 'Tab') {
+                        event.preventDefault();
+                        this.autoComplete();
+                    }
+                },
+                
+                autoComplete() {
+                    const input = this.currentInput.toLowerCase().trim();
+                    const inputParts = input.split(' ');
+                    const commands = ['help', 'ls', 'cat', 'open', 'github', 'about', 'contact', 'clear', 'whoami'];
+                    const projectNames = this.projects.map(p => p.name);
+                    
+                    // If we're completing the first word (command)
+                    if (inputParts.length === 1) {
+                        const allOptions = [...commands, ...projectNames];
+                        const matches = allOptions.filter(option => option.startsWith(input));
+                        
+                        if (matches.length === 1) {
+                            this.currentInput = matches[0];
+                        } else if (matches.length > 1) {
+                            // Find common prefix
+                            const commonPrefix = this.findCommonPrefix(matches);
+                            if (commonPrefix.length > input.length) {
+                                this.currentInput = commonPrefix;
+                            } else {
+                                this.output.push({
+                                    type: 'info',
+                                    content: `Possible completions: ${matches.join(', ')}`
+                                });
+                                this.$nextTick(() => {
+                                    this.scrollToBottom();
+                                });
+                            }
+                        }
+                    }
+                    // If we're completing the second word (project name for commands that take project names)
+                    else if (inputParts.length === 2) {
+                        const command = inputParts[0];
+                        const partialProject = inputParts[1];
+                        
+                        // Commands that take project names as arguments
+                        const projectCommands = ['cat', 'open', 'live', 'github'];
+                        
+                        if (projectCommands.includes(command)) {
+                            const matches = projectNames.filter(name => name.startsWith(partialProject));
+                            
+                            if (matches.length === 1) {
+                                this.currentInput = `${command} ${matches[0]}`;
+                            } else if (matches.length > 1) {
+                                // Find common prefix
+                                const commonPrefix = this.findCommonPrefix(matches);
+                                if (commonPrefix.length > partialProject.length) {
+                                    this.currentInput = `${command} ${commonPrefix}`;
+                                } else {
+                                    this.output.push({
+                                        type: 'info',
+                                        content: `Possible completions: ${matches.join(', ')}`
+                                    });
+                                    this.$nextTick(() => {
+                                        this.scrollToBottom();
+                                    });
+                                }
+                            }
+                        }
+                    }
+                },
+                
+                findCommonPrefix(strings) {
+                    if (strings.length === 0) return '';
+                    if (strings.length === 1) return strings[0];
+                    
+                    let prefix = '';
+                    const firstString = strings[0];
+                    
+                    for (let i = 0; i < firstString.length; i++) {
+                        const char = firstString[i];
+                        if (strings.every(str => str[i] === char)) {
+                            prefix += char;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    return prefix;
+                },
+                
+                scrollToBottom() {
+                    const output = this.$refs.output;
+                    output.scrollTop = output.scrollHeight;
+                }
+            },
+            template: `
+                <div class="terminal-container">
+                    <div class="terminal-header">
+                        <div class="terminal-title">Portfolio Terminal v1.0</div>
+                    </div>
+                    
+                    <div class="terminal-output" ref="output">
+                        <div v-for="(line, index) in output" :key="index" class="terminal-line">
+                            <span :class="line.type" v-if="line.type === 'ascii'" class="ascii-art">{{ line.content }}</span>
+                            <span :class="line.type" v-else>{{ line.content }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="terminal-input-container">
+                        <span class="terminal-prompt">$</span>
+                        <input 
+                            ref="input"
+                            v-model="currentInput"
+                            @keydown.enter="handleCommand"
+                            @keydown="handleKeydown"
+                            class="terminal-input"
+                            type="text"
+                            autocomplete="off"
+                            spellcheck="false"
+                        >
+                        <span class="cursor">_</span>
+                    </div>
+                </div>
+            `
+        };
+
+        createApp({
+            components: {
+                Terminal
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
