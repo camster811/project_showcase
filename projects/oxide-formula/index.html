@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oxide-Formula API Server - Backend for Oxide App</title>
+    <meta name="description" content="FastAPI backend server for Oxide App - bridges web frontend to binary analysis engine">
+    
+    <style>
+        :root {
+            --terminal-bg: #0c0c0c;
+            --terminal-text: #00ff00;
+            --terminal-prompt: #ffff00;
+            --terminal-error: #ff0000;
+            --terminal-info: #00ffff;
+            --terminal-warning: #ffa500;
+            --terminal-accent: #ff00ff;
+            --terminal-secondary: #9dbaea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: var(--terminal-bg);
+            color: var(--terminal-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--terminal-bg);
+            color: var(--terminal-info);
+            text-decoration: none;
+            padding: 10px 15px;
+            border: 2px solid var(--terminal-info);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button a:hover {
+            background: var(--terminal-info);
+            color: var(--terminal-bg);
+        }
+
+        .project-header {
+            text-align: center;
+            margin: 60px 0 40px 0;
+            padding: 40px 20px;
+            border: 2px solid var(--terminal-warning);
+            border-radius: 8px;
+            background: rgba(255, 165, 0, 0.05);
+        }
+
+        .project-header h1 {
+            color: var(--terminal-warning);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--terminal-warning);
+        }
+
+        .project-subtitle {
+            color: var(--terminal-info);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .project-description {
+            color: var(--terminal-text);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .tech-tag {
+            background: rgba(255, 165, 0, 0.1);
+            color: var(--terminal-warning);
+            padding: 5px 12px;
+            border: 1px solid var(--terminal-warning);
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .section {
+            margin: 40px 0;
+            padding: 30px;
+            border: 1px solid var(--terminal-text);
+            border-radius: 8px;
+            background: rgba(0, 255, 0, 0.02);
+        }
+
+        .section h2 {
+            color: var(--terminal-info);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section h3 {
+            color: var(--terminal-warning);
+            font-size: 1.3em;
+            margin: 25px 0 15px 0;
+            border-bottom: 1px solid var(--terminal-warning);
+            padding-bottom: 5px;
+        }
+
+        .section p {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .api-card {
+            background: rgba(255, 165, 0, 0.05);
+            border: 1px solid var(--terminal-warning);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .api-card:hover {
+            border-color: var(--terminal-info);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .api-card h4 {
+            color: var(--terminal-warning);
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .api-endpoint {
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--terminal-info);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .api-card p {
+            color: var(--terminal-text);
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--terminal-text);
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .highlight {
+            color: var(--terminal-warning);
+            font-weight: bold;
+        }
+
+        .keyword {
+            color: var(--terminal-accent);
+        }
+
+        .string {
+            color: var(--terminal-info);
+        }
+
+        .comment {
+            color: var(--terminal-secondary);
+            font-style: italic;
+        }
+
+        .architecture-diagram {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--terminal-info);
+            border-radius: 8px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .architecture-diagram h3 {
+            color: var(--terminal-info);
+            border-bottom-color: var(--terminal-info);
+        }
+
+        .component-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .component-list li {
+            color: var(--terminal-text);
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .component-list li:before {
+            content: "▶";
+            color: var(--terminal-warning);
+            position: absolute;
+            left: 0;
+        }
+
+        .links-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--terminal-warning);
+            text-decoration: none;
+            padding: 12px 20px;
+            border: 2px solid var(--terminal-warning);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .project-link:hover {
+            background: var(--terminal-warning);
+            color: var(--terminal-bg);
+            transform: translateY(-2px);
+        }
+
+        .ascii-art {
+            color: var(--terminal-accent);
+            white-space: pre;
+            font-size: 0.7em;
+            text-align: center;
+            margin: 40px 0;
+            line-height: 1.2;
+        }
+
+        .flow-diagram {
+            background: rgba(255, 0, 255, 0.05);
+            border: 1px solid var(--terminal-accent);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .flow-step {
+            display: inline-block;
+            background: rgba(255, 0, 255, 0.1);
+            color: var(--terminal-accent);
+            padding: 10px 15px;
+            margin: 5px;
+            border: 1px solid var(--terminal-accent);
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .flow-arrow {
+            color: var(--terminal-accent);
+            font-size: 1.2em;
+            margin: 0 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .project-header {
+                margin: 80px 0 30px 0;
+                padding: 20px;
+            }
+            
+            .project-header h1 {
+                font-size: 2em;
+            }
+            
+            .api-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .links-section {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .ascii-art {
+                font-size: 0.5em;
+            }
+
+            .flow-step {
+                display: block;
+                margin: 10px 0;
+            }
+
+            .flow-arrow {
+                display: block;
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-button">
+        <a href="../../index.html">← Back to Terminal</a>
+    </div>
+
+    <div class="container">
+        <header class="project-header">
+            <h1>Oxide-Formula</h1>
+            <p class="project-subtitle">FastAPI Backend Server for Oxide App</p>
+            <p class="project-description">
+                A high-performance Python backend server that bridges the gap between the Oxide App web frontend 
+                and the core Oxide binary analysis engine. Built with FastAPI for modern async capabilities 
+                and RESTful API design, enabling web-based binary analysis through HTTP endpoints.
+            </p>
+            <div class="tech-stack">
+                <span class="tech-tag">Python</span>
+                <span class="tech-tag">FastAPI</span>
+                <span class="tech-tag">Uvicorn</span>
+                <span class="tech-tag">RESTful API</span>
+                <span class="tech-tag">CORS</span>
+                <span class="tech-tag">Async/Await</span>
+            </div>
+        </header>
+
+        <section class="section">
+            <h2>Project Overview</h2>
+            <p>
+                Oxide-Formula serves as the backend infrastructure for the Oxide App ecosystem. 
+                It transforms the Oxide binary analysis library into a web-accessible service, 
+                enabling the Vue.js frontend to perform binary analysis through HTTP APIs.
+            </p>
+            <p>
+                This server demonstrates modern Python web development practices, featuring async request handling, 
+                automatic API documentation, CORS configuration for browser security, and error handling. 
+                It's designed to handle the computational demands of binary analysis while maintaining responsive 
+                web application performance.
+            </p>
+
+            <div class="flow-diagram">
+                <div class="flow-step">Vue.js Frontend</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">FastAPI Server</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">Oxide Library</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">Binary Analysis</div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>API Endpoints & Architecture</h2>
+            
+            <div class="api-grid">
+                <div class="api-card">
+                    <h4>Collections Management</h4>
+                    <div class="api-endpoint">GET /api/collections/</div>
+                    <div class="api-endpoint">GET /api/collections/files</div>
+                    <p>Manages binary file collections and provides file enumeration within collections. Powers the collection selector interface in the frontend application.</p>
+                </div>
+
+                <div class="api-card">
+                    <h4>Module Discovery</h4>
+                    <div class="api-endpoint">GET /api/modules/</div>
+                    <p>Lists all available analysis modules from the Oxide library. Enables dynamic module discovery for the frontend visualization components.</p>
+                </div>
+
+                <div class="api-card">
+                    <h4>Data Retrieval</h4>
+                    <div class="api-endpoint">GET /api/retrieve</div>
+                    <p>Core endpoint for fetching analysis results. Supports both individual file analysis and batch collection processing with flexible query parameters.</p>
+                </div>
+
+                <div class="api-card">
+                    <h4>Direct Oxide API</h4>
+                    <div class="api-endpoint">GET /api/oxide/methods</div>
+                    <div class="api-endpoint">GET /api/oxide/retrieve/</div>
+                    <div class="api-endpoint">GET /api/oxide/get_field/</div>
+                    <p>Low-level access to Oxide library functions with direct parameter passing. Provides maximum flexibility for advanced analysis operations.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section architecture-diagram">
+            <h2>Technical Architecture</h2>
+            
+            <h3>FastAPI Framework Benefits</h3>
+            <ul class="component-list">
+                <li><span class="highlight">Async/Await Support</span> - Non-blocking request handling for better performance</li>
+                <li><span class="highlight">Automatic API Documentation</span> - OpenAPI/Swagger integration out of the box</li>
+                <li><span class="highlight">Request Validation</span> - Automatic request/response validation</li>
+                <li><span class="highlight">High Performance</span> - Built on Starlette and Pydantic for speed</li>
+            </ul>
+
+            <h3>Server Configuration</h3>
+            <ul class="component-list">
+                <li><span class="highlight">CORS Middleware</span> - Configured for browser-based frontend access</li>
+                <li><span class="highlight">Uvicorn ASGI Server</span> - High-performance async server implementation</li>
+                <li><span class="highlight">Dynamic Path Configuration</span> - Runtime Oxide library path validation</li>
+                <li><span class="highlight">Configurable Networking</span> - Host/port settings via configuration file</li>
+            </ul>
+
+            <h3>Integration Layer</h3>
+            <ul class="component-list">
+                <li><span class="highlight">Direct Python Imports</span> - Native integration with Oxide library</li>
+                <li><span class="highlight">Error Handling</span> - Comprehensive exception handling and HTTP status codes</li>
+                <li><span class="highlight">Query Parameter Processing</span> - Flexible API parameter handling</li>
+                <li><span class="highlight">JSON Response Formatting</span> - Structured data output for frontend consumption</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Code Implementation Examples</h2>
+            
+            <h3>FastAPI Application Setup</h3>
+            <div class="code-block">
+                <pre><span class="keyword">from</span> <span class="string">fastapi</span> <span class="keyword">import</span> FastAPI
+<span class="keyword">from</span> <span class="string">fastapi.middleware.cors</span> <span class="keyword">import</span> CORSMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[<span class="string">f"http://{host}:{clientport}"</span>],
+    allow_credentials=<span class="keyword">True</span>,
+    allow_methods=[<span class="string">"*"</span>],
+    allow_headers=[<span class="string">"*"</span>],
+)</pre>
+            </div>
+
+            <h3>Collection Management Endpoint</h3>
+            <div class="code-block">
+                <pre><span class="keyword">@collections_router.get</span>(<span class="string">"/"</span>)
+<span class="keyword">async def</span> <span class="highlight">get_collections</span>():
+    collection_names = oxide.collection_names()
+    <span class="keyword">return</span> collection_names
+
+<span class="keyword">@collections_router.get</span>(<span class="string">"/files"</span>)
+<span class="keyword">async def</span> <span class="highlight">get_collection_files</span>(selected_collection: <span class="keyword">str</span>):
+    names = {}
+    <span class="keyword">try</span>:
+        cid = oxide.get_cid_from_name(selected_collection)
+        file_oids = oxide.expand_oids(cid)
+        <span class="keyword">for</span> oid <span class="keyword">in</span> file_oids:
+            names.update({<span class="string">f'{oxide.get_names_from_oid(oid)}'</span> : <span class="string">f'${oid}'</span>})
+        <span class="keyword">return</span> names
+    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+        <span class="keyword">raise</span> HTTPException(status_code=<span class="highlight">500</span>, detail=<span class="keyword">str</span>(e))</pre>
+            </div>
+
+            <h3>Data Retrieval with Flexible Parameters</h3>
+            <div class="code-block">
+                <pre><span class="keyword">@retrieve_router.get</span>(<span class="string">"/retrieve"</span>)
+<span class="keyword">async def</span> <span class="highlight">retrieve_module</span>(
+    selected_module: <span class="keyword">str</span>, 
+    selected_collection: <span class="keyword">str</span> = <span class="keyword">None</span>, 
+    selected_oid: <span class="keyword">str</span> = <span class="keyword">None</span>
+):
+    <span class="keyword">try</span>:
+        <span class="keyword">if</span> selected_oid:
+            oid_list = [selected_oid]
+            results = oxide.retrieve(selected_module, oid_list)
+            <span class="keyword">return</span> results
+        
+        <span class="keyword">if</span> selected_collection:
+            cid = oxide.get_cid_from_name(selected_collection)
+            files = oxide.expand_oids(cid)
+            results = oxide.retrieve(selected_module, files)
+            <span class="keyword">return</span> results
+            
+    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+        <span class="keyword">return</span> {<span class="string">"error"</span>: <span class="keyword">str</span>(e)}</pre>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Key Features & Capabilities</h2>
+            
+            <h3>Modern Python Web Development</h3>
+            <p>
+                Demonstrates contemporary Python web development practices using FastAPI's async capabilities, 
+                type hints, and automatic documentation generation. The server handles concurrent requests 
+                efficiently while maintaining clean, readable code.
+            </p>
+
+            <h3>Seamless Frontend Integration</h3>
+            <p>
+                CORS configuration enables secure browser-based access from the Vue.js frontend. The API 
+                design follows RESTful principles with consistent JSON responses that map directly to 
+                frontend data requirements.
+            </p>
+
+            <h3>Dynamic Configuration Management</h3>
+            <p>
+                Runtime configuration validation ensures the Oxide library path is accessible before 
+                server startup. Configuration files allow easy deployment across different environments 
+                without code changes.
+            </p>
+
+            <h3>Robust Error Handling</h3>
+            <p>
+                Comprehensive exception handling with appropriate HTTP status codes ensures reliable 
+                API behavior. Error responses provide meaningful feedback for debugging and user 
+                experience improvement.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>Development & Deployment</h2>
+            
+            <h3>Local Development Setup</h3>
+            <div class="code-block">
+                <pre><span class="comment"># Install dependencies</span>
+pip install -r requirements.txt
+
+<span class="comment"># Configure Oxide library path</span>
+<span class="comment"># Edit config.ini with correct oxide/src path</span>
+
+<span class="comment"># Start development server</span>
+python main.py
+
+<span class="comment"># Server runs on http://localhost:8000</span>
+<span class="comment"># API documentation available at /docs</span></pre>
+            </div>
+
+            <h3>Production Deployment</h3>
+            <div class="code-block">
+                <pre><span class="comment"># Production server with Uvicorn</span>
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+
+<span class="comment"># Docker deployment</span>
+FROM python:3.9-slim
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD [<span class="string">"uvicorn"</span>, <span class="string">"main:app"</span>, <span class="string">"--host"</span>, <span class="string">"0.0.0.0"</span>, <span class="string">"--port"</span>, <span class="string">"8000"</span>]</pre>
+            </div>
+
+            <h3>API Documentation</h3>
+            <p>
+                FastAPI automatically generates interactive API documentation accessible at <code>/docs</code> 
+                (Swagger UI) and <code>/redoc</code> (ReDoc). This provides a complete reference for all 
+                endpoints, parameters, and response formats.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2>Integration with Oxide Ecosystem</h2>
+            
+            <h3>Frontend Communication</h3>
+            <p>
+                The server receives HTTP requests from the Vue.js frontend components, processes them through 
+                the appropriate Oxide library functions, and returns structured JSON responses. This enables 
+                real-time binary analysis through web interfaces.
+            </p>
+
+            <h3>Data Flow Architecture</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">User Interaction</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">Vue Component</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">HTTP Request</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">FastAPI Router</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">Oxide Library</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">Analysis Results</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">JSON Response</div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-step">Visualization</div>
+            </div>
+        </section>
+
+        <div class="links-section">
+            <a href="https://github.com/camster811/oxide-formula" class="project-link" target="_blank">
+                🐙 View on GitHub
+            </a>
+            <a href="../oxide-app/index.html" class="project-link">
+                🔗 View Frontend (Oxide App)
+            </a>
+        </div>
+
+        <div class="ascii-art">
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                    Backend Infrastructure                    ║
+    ║              FastAPI • Python • Binary Analysis              ║
+    ╚══════════════════════════════════════════════════════════════╝
+        </div>
+    </div>
+</body>
+</html>
