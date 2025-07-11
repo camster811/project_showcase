@@ -19,6 +19,14 @@
             --terminal-error: #ff0000;
             --terminal-info: #00ffff;
             --terminal-warning: #ffa500;
+            --terminal-color1: #ff6b6b;
+            --terminal-color2: #4ecdc4;
+            --terminal-color3: #45b7d1;
+            --terminal-color4: #96ceb4;
+            --terminal-color5: #feca57;
+            --terminal-color6: #ff9ff3;
+            --terminal-color7: #54a0ff;
+            --terminal-color8: #5f27cd;
         }
 
         * {
@@ -94,6 +102,38 @@
 
         .warning {
             color: var(--terminal-warning);
+        }
+
+        .color1 {
+            color: var(--terminal-color1);
+        }
+
+        .color2 {
+            color: var(--terminal-color2);
+        }
+
+        .color3 {
+            color: var(--terminal-color3);
+        }
+
+        .color4 {
+            color: var(--terminal-color4);
+        }
+
+        .color5 {
+            color: var(--terminal-color5);
+        }
+
+        .color6 {
+            color: var(--terminal-color6);
+        }
+
+        .color7 {
+            color: var(--terminal-color7);
+        }
+
+        .color8 {
+            color: var(--terminal-color8);
         }
 
         .terminal-input-container {
@@ -215,7 +255,9 @@
                     currentInput: '',
                     commandHistory: [],
                     historyIndex: -1,
-                    projects: projectsData
+                    projects: projectsData,
+                    commandColorIndex: 0,
+                    colorClasses: ['color1', 'color2', 'color3', 'color4', 'color5', 'color6', 'color7', 'color8']
                 };
             },
             mounted() {
@@ -274,39 +316,39 @@
                 executeCommand(command) {
                     const [cmd, ...args] = command.toLowerCase().split(' ');
                     
-                    // Clear previous output before showing new command results (except for clear command)
-                    if (cmd !== 'clear') {
-                        this.output = [];
-                        this.showWelcome();
+                    // Get current color for this command
+                    const currentColor = this.colorClasses[this.commandColorIndex];
+                    this.commandColorIndex = (this.commandColorIndex + 1) % this.colorClasses.length;
+                    
+                    if (cmd === 'clear') {
+                        this.clearTerminal();
+                        return;
                     }
                     
                     switch (cmd) {
                         case 'help':
-                            this.showHelp();
+                            this.showHelp(currentColor);
                             break;
                         case 'ls':
-                            this.listProjects();
+                            this.listProjects(currentColor);
                             break;
                         case 'cat':
-                            this.showProject(args[0]);
+                            this.showProject(args[0], currentColor);
                             break;
                         case 'open':
-                            this.openProject(args[0]);
+                            this.openProject(args[0], currentColor);
                             break;
                         case 'github':
-                            this.openGithub(args[0]);
+                            this.openGithub(args[0], currentColor);
                             break;
                         case 'about':
-                            this.openAbout();
+                            this.openAbout(currentColor);
                             break;
                         case 'contact':
-                            this.showContact();
-                            break;
-                        case 'clear':
-                            this.clearTerminal();
+                            this.showContact(currentColor);
                             break;
                         case 'whoami':
-                            this.showWhoami();
+                            this.showWhoami(currentColor);
                             break;
                         default:
                             this.output.push({
@@ -316,14 +358,14 @@
                     }
                 },
                 
-                showHelp() {
+                showHelp(color) {
                     const helpText = [  
                         'Available commands:',
                         '',
                         '  help                 - Show this help message',
                         '  ls                   - List all projects',
-                        '  cat <project>        - Show project details',
-                        '  open <project>       - Open project detail page',
+                        '  cat <project>        - Print project details',
+                        '  open <project>       - Open project info page',
                         '  github <project>     - Open GitHub repository',
                         '  about                - About me',
                         '  contact              - Contact information',
@@ -332,22 +374,22 @@
                         '',
                         'Examples:',
                         '  ls',
-                        '  cat example-project-1',
-                        '  live example-project-1',
+                        '  cat spacy_redactor',
+                        '  open oxide-app',
                         ''
                     ];
                     
                     helpText.forEach(line => {
                         this.output.push({
-                            type: line.startsWith('  ') ? 'info' : 'normal',
+                            type: color,
                             content: line
                         });
                     });
                 },
                 
-                listProjects() {
+                listProjects(color) {
                     this.output.push({
-                        type: 'info',
+                        type: color,
                         content: 'Projects:'
                     });
                     
@@ -355,23 +397,23 @@
                         const status = project.featured ? '★' : ' ';
                         const statusText = project.status === 'completed' ? '✓' : '⚠';
                         this.output.push({
-                            type: 'normal',
+                            type: color,
                             content: `  ${status} ${project.name.padEnd(20)} ${statusText} ${project.title}`
                         });
                     });
                     
                     this.output.push({
-                        type: 'normal',
+                        type: color,
                         content: ''
                     });
                     
                     this.output.push({
-                        type: 'info',
+                        type: color,
                         content: 'Use "cat <project-name>" to view details'
                     });
                 },
                 
-                showProject(projectName) {
+                showProject(projectName, color) {
                     if (!projectName) {
                         this.output.push({
                             type: 'error',
@@ -390,37 +432,37 @@
                     }
                     
                     this.output.push({
-                        type: 'info',
+                        type: color,
                         content: `Project: ${project.title}`
                     });
                     
                     this.output.push({
-                        type: 'normal',
+                        type: color,
                         content: `Description: ${project.description}`
                     });
                     
                     this.output.push({
-                        type: 'normal',
+                        type: color,
                         content: `Technologies: ${project.technologies.join(', ')}`
                     });
                     
                     this.output.push({
-                        type: 'normal',
+                        type: color,
                         content: `Status: ${project.status}`
                     });
                     
                     this.output.push({
-                        type: 'normal',
+                        type: color,
                         content: `GitHub: ${project.github}`
                     });
                     
                     this.output.push({
-                        type: 'normal',
+                        type: color,
                         content: ''
                     });
                 },
                 
-                openProject(projectName) {
+                openProject(projectName, color) {
                     if (!projectName) {
                         this.output.push({
                             type: 'error',
@@ -439,16 +481,14 @@
                     }
                     
                     this.output.push({
-                        type: 'info',
+                        type: color,
                         content: `Opening project detail page for ${project.title}...`
                     });
                     
-                    // Navigate to project detail page
                     window.location.href = `projects/${projectName}/index.html`;
                 },
-            
                 
-                openGithub(projectName) {
+                openGithub(projectName, color) {
                     if (!projectName) {
                         this.output.push({
                             type: 'error',
@@ -467,25 +507,23 @@
                     }
                     
                     this.output.push({
-                        type: 'info',
+                        type: color,
                         content: `Opening GitHub repository: ${project.github}`
                     });
                     
                     window.open(project.github, '_blank');
                 },
                 
-                openAbout() {
+                openAbout(color) {
                     this.output.push({
-                        type: 'info',
+                        type: color,
                         content: 'Opening About Me page...'
                     });
                     
-                    // Navigate to about page
                     window.location.href = 'about/index.html';
                 },
                 
-                
-                showContact() {
+                showContact(color) {
                     const contactText = [
                         'Contact Information:',
                         '',
@@ -498,15 +536,15 @@
                     
                     contactText.forEach(line => {
                         this.output.push({
-                            type: line === 'Contact Information:' ? 'info' : 'normal',
+                            type: color,
                             content: line
                         });
                     });
                 },
                 
-                showWhoami() {
+                showWhoami(color) {
                     this.output.push({
-                        type: 'normal',
+                        type: color,
                         content: 'guest@portfolio-terminal'
                     });
                 },
@@ -544,7 +582,7 @@
                     const commands = ['help', 'ls', 'cat', 'open', 'github', 'about', 'contact', 'clear', 'whoami'];
                     const projectNames = this.projects.map(p => p.name);
                     
-                    // If we're completing the first word (command)
+                    // If completing the first word (command)
                     if (inputParts.length === 1) {
                         const allOptions = [...commands, ...projectNames];
                         const matches = allOptions.filter(option => option.startsWith(input));
@@ -567,13 +605,13 @@
                             }
                         }
                     }
-                    // If we're completing the second word (project name for commands that take project names)
+                    // If completing the second word (project name for commands that take project names)
                     else if (inputParts.length === 2) {
                         const command = inputParts[0];
                         const partialProject = inputParts[1];
                         
                         // Commands that take project names as arguments
-                        const projectCommands = ['cat', 'open', 'live', 'github'];
+                        const projectCommands = ['cat', 'open', 'github'];
                         
                         if (projectCommands.includes(command)) {
                             const matches = projectNames.filter(name => name.startsWith(partialProject));
